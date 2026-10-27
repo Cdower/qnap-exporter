@@ -17,12 +17,12 @@ jobs:
     steps:
       - run: echo "🔎 Relesing from branch ${{ github.ref }}."
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: 'true'
       - name: Semantic versioning
-        uses: paulhatch/semantic-version@v5.4.0
+        uses: paulhatch/semantic-version@v6.0.5
         id: semver
         with:
           tag_prefix: "v"
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       # https://github.blog/2022-04-12-git-security-vulnerability-announced/
       - name: Set git repository ownership
         run: |
