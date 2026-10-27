@@ -1,11 +1,12 @@
 ARG ALLOY_VERSION=v1.21.2
-# Must match the snmp_exporter version embedded in ALLOY_VERSION (see Alloy's go.mod).
-ARG SNMP_EXPORTER_VERSION=v0.29.0
+# Alloy v1.21.2 embeds snmp_exporter v0.29.0. Newer generators are fine as long
+# as the rendered snmp.yml only uses config fields that version understands.
+ARG SNMP_EXPORTER_VERSION=v0.31.0
 ARG NET_SNMP_VERSION=v5.9.4
 
 # Alloy's prometheus.exporter.snmp doesn't read MIBs at runtime; it needs a
 # snmp_exporter module file. Render one from the QNAP MIBs at build time.
-FROM golang:1.24-bookworm AS snmp-generator
+FROM golang:1.26-bookworm AS snmp-generator
 
 ARG SNMP_EXPORTER_VERSION
 ARG NET_SNMP_VERSION
