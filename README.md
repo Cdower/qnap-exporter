@@ -1,12 +1,32 @@
 # QNAP exporter
 
 ## Description
-This repository provides a metrics exporter for Qnap NAS. It uses Telegraf with SNMP input and Prometheus output. Grafana Dashboard is included as k8's ConfigMap.
+This repository provides a metrics exporter for Qnap NAS. It uses Grafana Alloy's SNMP exporter and remote-writes metrics to Grafana Cloud. Grafana Dashboard is included as k8's ConfigMap.
 
 ## Container image ![qnap-exporter](https://github.com/bsosnowski/qnap-exporter/actions/workflows/build.yml/badge.svg)
 qnap-exporter container images are built for architectures:
 - linux/amd64
 - linux/arm64 
+
+### Running with Grafana Alloy
+The image is based on [Grafana Alloy](https://grafana.com/docs/alloy/latest/) and polls the NAS with
+[`prometheus.exporter.snmp`](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.snmp/),
+then remote-writes the metrics to Grafana Cloud. The SNMP module is generated from the QNAP MIBs at build time
+(`docker/snmp/generator.yml`), and the pipeline lives in `docker/config.alloy`.
+
+```shell
+docker run -d --name qnap-exporter \
+  -e QNAP_SNMP_ADDRESS=192.168.1.100 \
+  -e QNAP_SNMP_COMMUNITY=snmp-telegraf \
+  -e QNAP_HOSTNAME=NAS453D \
+  -e GRAFANA_CLOUD_PROMETHEUS_URL=https://prometheus-prod-XX-prod-REGION.grafana.net/api/prom/push \
+  -e GRAFANA_CLOUD_PROMETHEUS_USERNAME=<prometheus instance ID> \
+  -e GRAFANA_CLOUD_API_KEY=<access policy token with metrics:write> \
+  -p 12345:12345 \
+  ghcr.io/bsosnowski/docker/qnap-exporter
+```
+
+Optional: `SCRAPE_INTERVAL` (default `60s`) and `SCRAPE_TIMEOUT` (default `50s`). The Alloy UI is on port 12345.
 
 ## How to configure NAS
 

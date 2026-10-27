@@ -1,0 +1,80 @@
+# snmp_exporter generator config for QNAP NAS devices.
+# The Dockerfile renders this into snmp.yml, the module format that Alloy's
+# prometheus.exporter.snmp component (embedded snmp_exporter) understands.
+# SNMP credentials are deliberately left out; they are supplied at runtime
+# from config.alloy so the image carries no secrets.
+modules:
+  qnap:
+    walk:
+      # NAS-MIB system scalars
+      - NAS-MIB::systemCPU-UsageEX
+      - NAS-MIB::systemTotalMemEX
+      - NAS-MIB::systemFreeMemEX
+      - NAS-MIB::systemUptimeEX
+      - NAS-MIB::cpu-TemperatureEX
+      - NAS-MIB::systemTemperatureEX
+      - NAS-MIB::modelNameEX
+      - NAS-MIB::hostNameEX
+      # NAS-MIB tables
+      - NAS-MIB::cpuTable
+      - NAS-MIB::enclosureTable
+      - NAS-MIB::systemFanTableEx
+      - NAS-MIB::diskTable
+      - NAS-MIB::systemVolumeTableEx
+      - NAS-MIB::diskPerformanceTable
+      - NAS-MIB::jBODHdTable1
+      - NAS-MIB::systemPowerTable
+      - NAS-MIB::systemIfTableEx
+      # QTS-MIB memory, uptime and service state
+      - QTS-MIB::systemTotalMem
+      - QTS-MIB::systemFreeMem
+      - QTS-MIB::systemAvailableMem
+      - QTS-MIB::systemUsedMemory
+      - QTS-MIB::systemCacheMemory
+      - QTS-MIB::systemBufferMemory
+      - QTS-MIB::sysUptime
+      - QTS-MIB::nfsV2V3IsEnabled
+      - QTS-MIB::nfsV4IsEnabled
+      - QTS-MIB::sshIsEnabled
+      - QTS-MIB::sshSFTPEnabled
+      - QTS-MIB::telnetIsEnabled
+      - QTS-MIB::ftpEnabled
+    lookups:
+      - source_indexes: [enclosureIndex]
+        lookup: NAS-MIB::enclosureName
+      - source_indexes: [enclosureIndex]
+        lookup: NAS-MIB::enclosureModel
+      - source_indexes: [sysFanIndexEX]
+        lookup: NAS-MIB::sysFanDescrEX
+      - source_indexes: [diskIndex]
+        lookup: NAS-MIB::diskModel
+      - source_indexes: [sysVolumeIndexEX]
+        lookup: NAS-MIB::sysVolumeDescrEX
+      - source_indexes: [sysVolumeIndexEX]
+        lookup: NAS-MIB::sysVolumeFSEX
+      - source_indexes: [jBODHdIndex1]
+        lookup: NAS-MIB::jBODHdDescr1
+      - source_indexes: [jBODHdIndex1]
+        lookup: NAS-MIB::jBODHdModel1
+      - source_indexes: [ifIndexEX]
+        lookup: NAS-MIB::ifDescrEX
+    overrides:
+      # Descriptive strings exposed as labels above; don't emit them twice.
+      enclosureName:
+        ignore: true
+      enclosureModel:
+        ignore: true
+      sysFanDescrEX:
+        ignore: true
+      diskModel:
+        ignore: true
+      sysVolumeDescrEX:
+        ignore: true
+      sysVolumeFSEX:
+        ignore: true
+      jBODHdDescr1:
+        ignore: true
+      jBODHdModel1:
+        ignore: true
+      ifDescrEX:
+        ignore: true

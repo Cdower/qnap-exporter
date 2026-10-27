@@ -1,14 +1,45 @@
-ARG TELEGRAF_VERSION
-FROM telegraf:$TELEGRAF_VERSION
+ARG ALLOY_VERSION=v1.21.2
+# Must match the snmp_exporter version embedded in ALLOY_VERSION (see Alloy's go.mod).
+ARG SNMP_EXPORTER_VERSION=v0.29.0
+ARG NET_SNMP_VERSION=v5.9.4
 
-ARG TELEGRAF_VERSION
+# Alloy's prometheus.exporter.snmp doesn't read MIBs at runtime; it needs a
+# snmp_exporter module file. Render one from the QNAP MIBs at build time.
+FROM golang:1.24-bookworm AS snmp-generator
+
+ARG SNMP_EXPORTER_VERSION
+ARG NET_SNMP_VERSION
+
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends libsnmp-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN go install github.com/prometheus/snmp_exporter/generator@${SNMP_EXPORTER_VERSION}
+
+WORKDIR /generator
+
+# Base SMI definitions the QNAP MIBs import from.
+RUN mkdir mibs && \
+    for mib in SNMPv2-SMI SNMPv2-TC SNMPv2-CONF; do \
+        curl -fsSL -o "mibs/${mib}.txt" \
+            "https://raw.githubusercontent.com/net-snmp/net-snmp/${NET_SNMP_VERSION}/mibs/${mib}.txt"; \
+    done
+
+COPY NAS.mib QTS.mib mibs/
+COPY snmp/generator.yml .
+
+RUN MIBDIRS=/generator/mibs generator generate -g generator.yml -o snmp.yml
+
+FROM grafana/alloy:${ALLOY_VERSION}
+
+ARG ALLOY_VERSION
 ARG TARGETPLATFORM
 ARG BUILD_DATE
 ARG REVISION
 ARG VERSION
 ARG REF
 
-ENV TELEGRAF_VERSION=$TELEGRAF_VERSION
+ENV ALLOY_VERSION=${ALLOY_VERSION}
 ENV TARGETPLATFORM=${TARGETPLATFORM}
 ENV BUILD_DATE=${BUILD_DATE}
 ENV REVISION=${REVISION}
@@ -26,20 +57,13 @@ LABEL org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.title="Qnap Exporter" \
       org.opencontainers.image.description="SNMP Qnap Exporter" \
       arch="${TARGETPLATFORM}" \
-      telegraf.version="${TELEGRAF_VERSION}"
+      alloy.version="${ALLOY_VERSION}"
 
-RUN echo "deb http://deb.debian.org/debian bookworm main contrib non-free" >> /etc/apt/sources.list && \
-    apt-get update && \
-    apt-get install --yes --no-install-recommends snmp-mibs-downloader && \
-    rm -rf /var/lib/apt/lists/*
+COPY --from=snmp-generator /generator/snmp.yml /etc/alloy/snmp.yml
+COPY config.alloy /etc/alloy/config.alloy
 
-COPY NAS.mib QTS.mib /usr/share/snmp/mibs/
+# Alloy UI and health endpoint (/-/ready).
+EXPOSE 12345
 
-COPY --chmod=755 entrypoint.sh /entrypoint.sh
-
-RUN chmod +x /entrypoint.sh
-
-RUN download-mibs && sed -i "s/^\(mibs *:\).*/#\1/" /etc/snmp/snmp.conf
-
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["telegraf"]
+ENTRYPOINT ["/bin/alloy"]
+CMD ["run", "/etc/alloy/config.alloy", "--storage.path=/var/lib/alloy/data", "--server.http.listen-addr=0.0.0.0:12345"]
