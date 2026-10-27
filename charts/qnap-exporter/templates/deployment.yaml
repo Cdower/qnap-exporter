@@ -1,28 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "telegraf-qnap.fullname" . }}
+  name: {{ include "qnap-exporter.fullname" . }}
   labels:
-    {{- include "telegraf-qnap.labels" . | nindent 4 }}
+    {{- include "qnap-exporter.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  # More than one replica would remote-write duplicate samples.
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
-      {{- include "telegraf-qnap.selectorLabels" . | nindent 6 }}
+      {{- include "qnap-exporter.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
-        {{- include "telegraf-qnap.selectorLabels" . | nindent 8 }}
+        {{- include "qnap-exporter.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "telegraf-qnap.serviceAccountName" . }}
+      serviceAccountName: {{ include "qnap-exporter.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -31,24 +35,54 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/var/lib/alloy/data
+            - --server.http.listen-addr=0.0.0.0:{{ .Values.service.port }}
+          env:
+            - name: QNAP_SNMP_ADDRESS
+              value: {{ required "nas.snmp.address is required" .Values.nas.snmp.address | quote }}
+            - name: QNAP_HOSTNAME
+              value: {{ .Values.nas.hostname | quote }}
+            - name: SCRAPE_INTERVAL
+              value: {{ .Values.nas.scrapeInterval | quote }}
+            - name: SCRAPE_TIMEOUT
+              value: {{ .Values.nas.scrapeTimeout | quote }}
+            - name: GRAFANA_CLOUD_PROMETHEUS_URL
+              value: {{ required "grafanaCloud.prometheusUrl is required" .Values.grafanaCloud.prometheusUrl | quote }}
+            - name: GRAFANA_CLOUD_PROMETHEUS_USERNAME
+              value: {{ required "grafanaCloud.username is required" .Values.grafanaCloud.username | quote }}
+            - name: GRAFANA_CLOUD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "qnap-exporter.secretName" . }}
+                  key: GRAFANA_CLOUD_API_KEY
+            - name: QNAP_SNMP_COMMUNITY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "qnap-exporter.secretName" . }}
+                  key: QNAP_SNMP_COMMUNITY
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /metrics
+              path: /-/healthy
               port: http
           readinessProbe:
             httpGet:
-              path: /metrics
+              path: /-/ready
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-            - name: {{ include "telegraf-qnap.fullname" . }}-volume
-              mountPath: /etc/telegraf/telegraf.conf
-              subPath: telegraf.conf
+            - name: data
+              mountPath: /var/lib/alloy/data
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -62,6 +96,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: {{ include "telegraf-qnap.fullname" . }}-volume
-          configMap:
-            name: {{ include "telegraf-qnap.fullname" . }}
+        # Remote-write WAL; doesn't need to survive restarts.
+        - name: data
+          emptyDir: {}

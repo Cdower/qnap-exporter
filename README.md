@@ -1,7 +1,7 @@
 # QNAP exporter
 
 ## Description
-This repository provides a metrics exporter for Qnap NAS. It uses Grafana Alloy's SNMP exporter and remote-writes metrics to Grafana Cloud. Grafana Dashboard is included as k8's ConfigMap.
+This repository provides a metrics exporter for Qnap NAS. It uses Grafana Alloy's SNMP exporter and remote-writes metrics to Grafana Cloud. A Grafana dashboard is included.
 
 ## Container image ![qnap-exporter](https://github.com/bsosnowski/qnap-exporter/actions/workflows/build.yml/badge.svg)
 qnap-exporter container images are built for architectures:
@@ -37,6 +37,8 @@ Optional: `SCRAPE_INTERVAL` (default `60s`) and `SCRAPE_TIMEOUT` (default `50s`)
     * Community: snmp-telegraf
 
 ## Grafana dashboard overview
+Import `charts/qnap-exporter/dashboards/qnap-dashboard.json` into Grafana (on Grafana Cloud: Dashboards → New → Import).
+Pick your Prometheus data source and, for the Logs row, your Loki data source from the variables at the top of the dashboard.
 
 ### Main
 ![Main](./pics/Main.png)
@@ -55,20 +57,26 @@ This section queries Loki for syslog logs. Logs should be sent in a separate pro
 ## Helm Chart Configuration
 Most important Helm configuration properties.
 
-| Property                              | Description                          | Example                  |
-| --------------------------------------| ------------------------------------ | ------------------------ |
-| nas.hostname                          | Hostname of you NAS                  | NAS453D                  |
-| nas.snmp.agent                        | URL for SNMP agent                   | udp://192.168.1.100:161  |
-| nas.snmp.timeout                      | SNMP timeout                         | 110s                     |
-| nas.snmp.version                      | SNMP version                         | 2                        |
-| nas.snmp.community                    | SNMP community name                  | snmp-telegraf            |
-| nas.snmp.retries                      | Number of retries                    | 0                        |
-| metrics.enabled                       | Enable metrics scraping              | true                     |
-| metrics.serviceMonitor.labels.release | Release name for Prometheus operator | kube-monitoring          |
+| Property                    | Description                                                         | Example                                            |
+| --------------------------- | ------------------------------------------------------------------- | -------------------------------------------------- |
+| nas.hostname                | Value of the `instance` label on every metric                      | NAS453D                                            |
+| nas.snmp.address            | host[:port] of the NAS SNMP agent (v2c)                             | 192.168.1.100:161                                  |
+| nas.snmp.community          | SNMP community name                                                 | snmp-telegraf                                      |
+| nas.scrapeInterval          | How often to poll the NAS                                           | 60s                                                |
+| nas.scrapeTimeout           | Timeout for a full SNMP walk                                        | 50s                                                |
+| grafanaCloud.prometheusUrl  | Grafana Cloud Prometheus remote_write URL                           | https://prometheus-prod-XX.grafana.net/api/prom/push |
+| grafanaCloud.username       | Grafana Cloud Prometheus instance ID                                | 123456                                             |
+| grafanaCloud.apiKey         | Access policy token with `metrics:write`                            | glc_...                                            |
+| grafanaCloud.existingSecret | Existing Secret with `GRAFANA_CLOUD_API_KEY` and `QNAP_SNMP_COMMUNITY` keys, used instead of `apiKey`/`community` | qnap-exporter-credentials |
+| dashboard.enabled           | Ship the dashboard as a ConfigMap for the Grafana sidecar           | false                                              |
 
 ## Helm install
 ```shell
-helm install qnap-exporter oci://ghcr.io/bsosnowski/charts/qnap-exporter --version 0.1.1
+helm install qnap-exporter oci://ghcr.io/bsosnowski/charts/qnap-exporter --version 0.1.1 \
+  --set nas.snmp.address=192.168.1.100:161 \
+  --set grafanaCloud.prometheusUrl=https://prometheus-prod-XX-prod-REGION.grafana.net/api/prom/push \
+  --set grafanaCloud.username=<prometheus instance ID> \
+  --set grafanaCloud.apiKey=<access policy token>
 ```
 or just pull:
 ```shell
