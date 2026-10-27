@@ -61,14 +61,16 @@ modules:
         lookup: NAS-MIB::diskModel
       - source_indexes: [diskIndex]
         lookup: NAS-MIB::diskCapacity
-      - source_indexes: [diskIndex]
-        lookup: NAS-MIB::diskSummary
       - source_indexes: [sysVolumeIndexEX]
         lookup: NAS-MIB::sysVolumeDescrEX
       - source_indexes: [sysVolumeIndexEX]
         lookup: NAS-MIB::sysVolumeFSEX
       - source_indexes: [diskPerformanceIndex]
         lookup: NAS-MIB::blvID
+      - source_indexes: [systemPowerIndex]
+        lookup: NAS-MIB::systemPowerID
+      - source_indexes: [systemPowerIndex]
+        lookup: NAS-MIB::systemPowerEnclosureID
       - source_indexes: [jBODHdIndex1]
         lookup: NAS-MIB::jBODHdDescr1
       - source_indexes: [jBODHdIndex1]
@@ -123,8 +125,6 @@ modules:
         ignore: true
       diskModel:
         ignore: true
-      diskSummary:
-        ignore: true
       sysVolumeDescrEX:
         ignore: true
       sysVolumeFSEX:
@@ -144,4 +144,8 @@ modules:
       diskEnclosureID:
         ignore: true
       blvID:
+        ignore: true
+      systemPowerID:
+        ignore: true
+      systemPowerEnclosureID:
         ignore: true

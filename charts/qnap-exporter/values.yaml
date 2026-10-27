@@ -76,9 +76,14 @@ nas:
     address: ""
     # Ignored when grafanaCloud.existingSecret is set.
     community: "snmp-telegraf"
-  # How often to poll the NAS, and how long a full SNMP walk may take.
-  scrapeInterval: 60s
-  scrapeTimeout: 50s
+    # Timeout and retries for each SNMP request. QNAP agents can be slow to
+    # answer large table walks.
+    timeout: 10s
+    retries: 2
+  # How often to poll the NAS, and the limit for one full poll. The timeout
+  # must not exceed the interval.
+  scrapeInterval: 120s
+  scrapeTimeout: 110s
 
 grafanaCloud:
   # Prometheus remote_write endpoint, e.g.

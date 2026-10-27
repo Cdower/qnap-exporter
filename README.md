@@ -26,7 +26,8 @@ docker run -d --name qnap-exporter \
   ghcr.io/bsosnowski/docker/qnap-exporter
 ```
 
-Optional: `SCRAPE_INTERVAL` (default `60s`) and `SCRAPE_TIMEOUT` (default `50s`). The Alloy UI is on port 12345.
+Optional: `SCRAPE_INTERVAL` (default `120s`), `SCRAPE_TIMEOUT` for a full poll (default `110s`), and
+`SNMP_TIMEOUT` / `SNMP_RETRIES` for each SNMP request (defaults `10s` / `2`). The Alloy UI is on port 12345.
 
 ## How to configure NAS
 
@@ -62,8 +63,10 @@ Most important Helm configuration properties.
 | nas.hostname                | Value of the `instance` label on every metric                      | NAS453D                                            |
 | nas.snmp.address            | host[:port] of the NAS SNMP agent (v2c)                             | 192.168.1.100:161                                  |
 | nas.snmp.community          | SNMP community name                                                 | snmp-telegraf                                      |
-| nas.scrapeInterval          | How often to poll the NAS                                           | 60s                                                |
-| nas.scrapeTimeout           | Timeout for a full SNMP walk                                        | 50s                                                |
+| nas.snmp.timeout            | Timeout for each SNMP request                                       | 10s                                                |
+| nas.snmp.retries            | Retries for each failed SNMP request                                | 2                                                  |
+| nas.scrapeInterval          | How often to poll the NAS                                           | 120s                                               |
+| nas.scrapeTimeout           | Limit for one full poll; must not exceed the interval               | 110s                                               |
 | grafanaCloud.prometheusUrl  | Grafana Cloud Prometheus remote_write URL                           | https://prometheus-prod-XX.grafana.net/api/prom/push |
 | grafanaCloud.username       | Grafana Cloud Prometheus instance ID                                | 123456                                             |
 | grafanaCloud.apiKey         | Access policy token with `metrics:write`                            | glc_...                                            |

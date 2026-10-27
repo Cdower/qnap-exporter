@@ -49,6 +49,10 @@ spec:
               value: {{ .Values.nas.scrapeInterval | quote }}
             - name: SCRAPE_TIMEOUT
               value: {{ .Values.nas.scrapeTimeout | quote }}
+            - name: SNMP_TIMEOUT
+              value: {{ .Values.nas.snmp.timeout | quote }}
+            - name: SNMP_RETRIES
+              value: {{ .Values.nas.snmp.retries | quote }}
             - name: GRAFANA_CLOUD_PROMETHEUS_URL
               value: {{ required "grafanaCloud.prometheusUrl is required" .Values.grafanaCloud.prometheusUrl | quote }}
             - name: GRAFANA_CLOUD_PROMETHEUS_USERNAME
@@ -70,9 +74,10 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          # /-/healthy fails whenever any component is unhealthy, which a
+          # restart wouldn't fix; only restart if the server stops responding.
           livenessProbe:
-            httpGet:
-              path: /-/healthy
+            tcpSocket:
               port: http
           readinessProbe:
             httpGet:

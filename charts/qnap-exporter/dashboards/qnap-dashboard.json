@@ -2395,7 +2395,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "diskTemperture{instance=\"$host\"}",
+          "expr": "diskTemperture{instance=\"$host\"} * on (instance, diskIndex) group_left (diskSummary) diskSummary{instance=\"$host\"}",
           "format": "table",
           "instant": true,
           "interval": "",

@@ -4,8 +4,10 @@
 //   QNAP_SNMP_ADDRESS                  NAS address, host[:port] (required)
 //   QNAP_SNMP_COMMUNITY                SNMP v2c community (default "public")
 //   QNAP_HOSTNAME                      value of the "instance" label (default: the address)
-//   SCRAPE_INTERVAL                    how often to poll the NAS (default "60s")
-//   SCRAPE_TIMEOUT                     SNMP walk timeout (default "50s")
+//   SCRAPE_INTERVAL                    how often to poll the NAS (default "120s")
+//   SCRAPE_TIMEOUT                     limit for one full poll; must not exceed the interval (default "110s")
+//   SNMP_TIMEOUT                       timeout for each SNMP request (default "10s")
+//   SNMP_RETRIES                       retries for each failed SNMP request (default "2")
 //   GRAFANA_CLOUD_PROMETHEUS_URL       e.g. https://prometheus-prod-XX.grafana.net/api/prom/push (required)
 //   GRAFANA_CLOUD_PROMETHEUS_USERNAME  Grafana Cloud Prometheus instance ID (required)
 //   GRAFANA_CLOUD_API_KEY              Grafana Cloud access policy token with metrics:write (required)
@@ -25,9 +27,17 @@ prometheus.exporter.snmp "qnap" {
     string.format("%q", coalesce(sys.env("QNAP_SNMP_COMMUNITY"), "public")) + "\n"
 
   target "qnap" {
-    address = sys.env("QNAP_SNMP_ADDRESS")
-    module  = "qnap,if_mib"
-    auth    = "qnap"
+    address     = sys.env("QNAP_SNMP_ADDRESS")
+    module      = "qnap,if_mib"
+    auth        = "qnap"
+    walk_params = "qnap"
+  }
+
+  // QNAP agents answer large table walks slowly, so allow more per request
+  // than snmp_exporter's 5s default.
+  walk_param "qnap" {
+    timeout = coalesce(sys.env("SNMP_TIMEOUT"), "10s")
+    retries = encoding.from_json(coalesce(sys.env("SNMP_RETRIES"), "2"))
   }
 }
 
@@ -45,8 +55,8 @@ discovery.relabel "qnap" {
 prometheus.scrape "qnap" {
   targets         = discovery.relabel.qnap.output
   forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
-  scrape_interval = coalesce(sys.env("SCRAPE_INTERVAL"), "60s")
-  scrape_timeout  = coalesce(sys.env("SCRAPE_TIMEOUT"), "50s")
+  scrape_interval = coalesce(sys.env("SCRAPE_INTERVAL"), "120s")
+  scrape_timeout  = coalesce(sys.env("SCRAPE_TIMEOUT"), "110s")
 }
 
 prometheus.remote_write "grafana_cloud" {
