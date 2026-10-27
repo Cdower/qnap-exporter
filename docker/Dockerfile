@@ -6,7 +6,9 @@ ARG NET_SNMP_VERSION=v5.9.4
 
 # Alloy's prometheus.exporter.snmp doesn't read MIBs at runtime; it needs a
 # snmp_exporter module file. Render one from the QNAP MIBs at build time.
-FROM golang:1.26-bookworm AS snmp-generator
+# snmp.yml is platform-independent, so build it natively once instead of under
+# emulation for every target platform.
+FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS snmp-generator
 
 ARG SNMP_EXPORTER_VERSION
 ARG NET_SNMP_VERSION

@@ -71,8 +71,9 @@ nas:
   # Value of the "instance" label on every metric.
   hostname: NAS453D
   snmp:
-    # host[:port] of the NAS SNMP agent (SNMP v2c).
-    address: "192.168.1.100:161"
+    # host[:port] of the NAS SNMP agent (SNMP v2c), e.g. "192.168.1.100:161".
+    # Required.
+    address: ""
     # Ignored when grafanaCloud.existingSecret is set.
     community: "snmp-telegraf"
   # How often to poll the NAS, and how long a full SNMP walk may take.
