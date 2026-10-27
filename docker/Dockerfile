@@ -8,7 +8,7 @@ ARG NET_SNMP_VERSION=v5.9.4
 # snmp_exporter module file. Render one from the QNAP MIBs at build time.
 # snmp.yml is platform-independent, so build it natively once instead of under
 # emulation for every target platform.
-FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS snmp-generator
+FROM --platform=$BUILDPLATFORM golang:1.26-trixie AS snmp-generator
 
 ARG SNMP_EXPORTER_VERSION
 ARG NET_SNMP_VERSION
@@ -48,6 +48,7 @@ ENV REVISION=${REVISION}
 ENV VERSION=${VERSION}
 ENV REF=${REF}
 
+# alloy.version must match the grafana/alloy tag above; update both together.
 LABEL org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.authors="cdower" \
       org.opencontainers.image.created="${BUILD_DATE}" \
@@ -58,7 +59,8 @@ LABEL org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.ref.name="${REF}" \
       org.opencontainers.image.title="Qnap Exporter" \
       org.opencontainers.image.description="SNMP Qnap Exporter" \
-      arch="${TARGETPLATFORM}"
+      arch="${TARGETPLATFORM}" \
+      alloy.version="v1.21.2"
 
 COPY --from=snmp-generator /generator/snmp.yml /etc/alloy/snmp.yml
 COPY config.alloy /etc/alloy/config.alloy
