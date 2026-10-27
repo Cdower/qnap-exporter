@@ -41,7 +41,7 @@ jobs:
     with:
       docker-image-name: qnap-exporter
       docker-registry: ghcr.io
-      docker-repository: bsosnowski/docker
+      docker-repository: cdower/docker
       version: ${{ needs.sem-version.outputs.version_tag }}
       context-path: docker
   
@@ -54,7 +54,7 @@ jobs:
       version: ${{ needs.sem-version.outputs.version }}
       context-path: charts/qnap-exporter
       helm-registry-directory: charts
-      helm-registry: oci://ghcr.io/bsosnowski
+      helm-registry: oci://ghcr.io/cdower
 
   release:
     name: Create Release

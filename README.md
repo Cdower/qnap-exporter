@@ -3,7 +3,7 @@
 ## Description
 This repository provides a metrics exporter for Qnap NAS. It uses Grafana Alloy's SNMP exporter and remote-writes metrics to Grafana Cloud. A Grafana dashboard is included.
 
-## Container image ![qnap-exporter](https://github.com/bsosnowski/qnap-exporter/actions/workflows/build.yml/badge.svg)
+## Container image ![qnap-exporter](https://github.com/cdower/qnap-exporter/actions/workflows/build.yml/badge.svg)
 qnap-exporter container images are built for architectures:
 - linux/amd64
 - linux/arm64 
@@ -23,7 +23,7 @@ docker run -d --name qnap-exporter \
   -e GRAFANA_CLOUD_PROMETHEUS_USERNAME=<prometheus instance ID> \
   -e GRAFANA_CLOUD_API_KEY=<access policy token with metrics:write> \
   -p 12345:12345 \
-  ghcr.io/bsosnowski/docker/qnap-exporter
+  ghcr.io/cdower/docker/qnap-exporter
 ```
 
 Optional: `SCRAPE_INTERVAL` (default `120s`), `SCRAPE_TIMEOUT` for a full poll (default `110s`), and
@@ -75,7 +75,7 @@ Most important Helm configuration properties.
 
 ## Helm install
 ```shell
-helm install qnap-exporter oci://ghcr.io/bsosnowski/charts/qnap-exporter --version 0.1.1 \
+helm install qnap-exporter oci://ghcr.io/cdower/charts/qnap-exporter --version 0.1.1 \
   --set nas.snmp.address=192.168.1.100:161 \
   --set grafanaCloud.prometheusUrl=https://prometheus-prod-XX-prod-REGION.grafana.net/api/prom/push \
   --set grafanaCloud.username=<prometheus instance ID> \
@@ -83,7 +83,7 @@ helm install qnap-exporter oci://ghcr.io/bsosnowski/charts/qnap-exporter --versi
 ```
 or just pull:
 ```shell
- helm pull oci://ghcr.io/bsosnowski/charts/qnap-exporter --version 0.1.1
+ helm pull oci://ghcr.io/cdower/charts/qnap-exporter --version 0.1.1
 ```
 
 ## TODO

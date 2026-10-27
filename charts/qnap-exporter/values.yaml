@@ -1,7 +1,7 @@
 # Default values for qnap-exporter
 
 image:
-  repository: ghcr.io/bsosnowski/docker/qnap-exporter
+  repository: ghcr.io/cdower/docker/qnap-exporter
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag:
