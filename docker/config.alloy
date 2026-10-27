@@ -28,14 +28,22 @@ prometheus.exporter.snmp "qnap" {
     address = sys.env("QNAP_SNMP_ADDRESS")
     module  = "qnap,if_mib"
     auth    = "qnap"
-    labels  = {
-      "instance" = coalesce(sys.env("QNAP_HOSTNAME"), sys.env("QNAP_SNMP_ADDRESS")),
-    }
+  }
+}
+
+// The exporter sets instance to its own component name; replace it with the
+// NAS hostname so dashboards can tell devices apart.
+discovery.relabel "qnap" {
+  targets = prometheus.exporter.snmp.qnap.targets
+
+  rule {
+    target_label = "instance"
+    replacement  = coalesce(sys.env("QNAP_HOSTNAME"), sys.env("QNAP_SNMP_ADDRESS"))
   }
 }
 
 prometheus.scrape "qnap" {
-  targets         = prometheus.exporter.snmp.qnap.targets
+  targets         = discovery.relabel.qnap.output
   forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
   scrape_interval = coalesce(sys.env("SCRAPE_INTERVAL"), "60s")
   scrape_timeout  = coalesce(sys.env("SCRAPE_TIMEOUT"), "50s")

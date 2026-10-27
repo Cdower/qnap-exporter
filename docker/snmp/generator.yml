@@ -3,6 +3,9 @@
 # prometheus.exporter.snmp component (embedded snmp_exporter) understands.
 # SNMP credentials are deliberately left out; they are supplied at runtime
 # from config.alloy so the image carries no secrets.
+#
+# Label names match the tags the old Telegraf config produced, so the
+# bundled Grafana dashboard can keep using them.
 modules:
   qnap:
     walk:
@@ -40,6 +43,10 @@ modules:
       - QTS-MIB::telnetIsEnabled
       - QTS-MIB::ftpEnabled
     lookups:
+      - source_indexes: [cpuIndex]
+        lookup: NAS-MIB::cpuID
+      - source_indexes: [enclosureIndex]
+        lookup: NAS-MIB::enclosureID
       - source_indexes: [enclosureIndex]
         lookup: NAS-MIB::enclosureName
       - source_indexes: [enclosureIndex]
@@ -47,11 +54,21 @@ modules:
       - source_indexes: [sysFanIndexEX]
         lookup: NAS-MIB::sysFanDescrEX
       - source_indexes: [diskIndex]
+        lookup: NAS-MIB::diskID
+      - source_indexes: [diskIndex]
+        lookup: NAS-MIB::diskEnclosureID
+      - source_indexes: [diskIndex]
         lookup: NAS-MIB::diskModel
+      - source_indexes: [diskIndex]
+        lookup: NAS-MIB::diskCapacity
+      - source_indexes: [diskIndex]
+        lookup: NAS-MIB::diskSummary
       - source_indexes: [sysVolumeIndexEX]
         lookup: NAS-MIB::sysVolumeDescrEX
       - source_indexes: [sysVolumeIndexEX]
         lookup: NAS-MIB::sysVolumeFSEX
+      - source_indexes: [diskPerformanceIndex]
+        lookup: NAS-MIB::blvID
       - source_indexes: [jBODHdIndex1]
         lookup: NAS-MIB::jBODHdDescr1
       - source_indexes: [jBODHdIndex1]
@@ -59,7 +76,45 @@ modules:
       - source_indexes: [ifIndexEX]
         lookup: NAS-MIB::ifDescrEX
     overrides:
-      # Descriptive strings exposed as labels above; don't emit them twice.
+      # The QNAP MIBs declare text columns as plain OCTET STRING, which
+      # snmp_exporter would otherwise render as hex. Type overrides are keyed by
+      # MIB-qualified name because several names (diskModel, enclosureName,
+      # jBODHdDescr1, ...) exist in both NAS-MIB and QTS-MIB.
+      NAS-MIB::enclosureName:
+        type: DisplayString
+      NAS-MIB::enclosureModel:
+        type: DisplayString
+      NAS-MIB::enclosureSerialNum:
+        type: DisplayString
+      NAS-MIB::sysFanDescrEX:
+        type: DisplayString
+      NAS-MIB::diskModel:
+        type: DisplayString
+      NAS-MIB::diskSummary:
+        type: DisplayString
+      NAS-MIB::sysVolumeDescrEX:
+        type: DisplayString
+      NAS-MIB::sysVolumeFSEX:
+        type: DisplayString
+      NAS-MIB::sysVolumeStatusEX:
+        type: DisplayString
+      NAS-MIB::jBODHdDescr1:
+        type: DisplayString
+      NAS-MIB::jBODHdModel1:
+        type: DisplayString
+      NAS-MIB::jBODHdTemperature1:
+        type: DisplayString
+      NAS-MIB::jBODHdCapacity1:
+        type: DisplayString
+      NAS-MIB::jBODHdSmartInfo1:
+        type: DisplayString
+      NAS-MIB::ifDescrEX:
+        type: DisplayString
+      NAS-MIB::modelNameEX:
+        type: DisplayString
+      NAS-MIB::hostNameEX:
+        type: DisplayString
+      # Exposed as labels by the lookups above; ignore matches on metric name.
       enclosureName:
         ignore: true
       enclosureModel:
@@ -67,6 +122,8 @@ modules:
       sysFanDescrEX:
         ignore: true
       diskModel:
+        ignore: true
+      diskSummary:
         ignore: true
       sysVolumeDescrEX:
         ignore: true
@@ -77,4 +134,14 @@ modules:
       jBODHdModel1:
         ignore: true
       ifDescrEX:
+        ignore: true
+      cpuID:
+        ignore: true
+      enclosureID:
+        ignore: true
+      diskID:
+        ignore: true
+      diskEnclosureID:
+        ignore: true
+      blvID:
         ignore: true
