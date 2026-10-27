@@ -49,11 +49,11 @@ ENV VERSION=${VERSION}
 ENV REF=${REF}
 
 LABEL org.opencontainers.image.version="${VERSION}" \
-      org.opencontainers.image.authors="bartosz.sosnowski" \
+      org.opencontainers.image.authors="cdower" \
       org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.url="https://github.com/bsosnowski/qnap-exporter" \
-      org.opencontainers.image.documentation="https://github.com/bsosnowski/qnap-exporter/blob/main/README.md" \
-      org.opencontainers.image.source="https://raw.githubusercontent.com/bsosnowski/qnap-exporter/refs/heads/main/docker/Dockerfile" \
+      org.opencontainers.image.url="https://github.com/cdower/qnap-exporter" \
+      org.opencontainers.image.documentation="https://github.com/cdower/qnap-exporter/blob/main/README.md" \
+      org.opencontainers.image.source="https://raw.githubusercontent.com/cdower/qnap-exporter/refs/heads/main/docker/Dockerfile" \
       org.opencontainers.image.revision="${REVISION}" \
       org.opencontainers.image.ref.name="${REF}" \
       org.opencontainers.image.title="Qnap Exporter" \
