@@ -60,6 +60,5 @@ jobs:
             "APP_NAME=${{ inputs.docker-image-name }}"
             "VERSION=${{ inputs.version }}"
             "BUILD_DATE=${{ steps.date.outputs.date }}"
-            "TELEGRAF_VERSION=1.32.2"
             "REVISION=${{ github.sha }}"
             "REF=${{ github.ref }}"
