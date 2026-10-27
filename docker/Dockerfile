@@ -1,6 +1,6 @@
-ARG ALLOY_VERSION=v1.21.2
-# Alloy v1.21.2 embeds snmp_exporter v0.29.0. Newer generators are fine as long
-# as the rendered snmp.yml only uses config fields that version understands.
+# Alloy embeds its own snmp_exporter (v0.29.0 as of Alloy v1.21.2). Newer
+# generators are fine as long as the rendered snmp.yml only uses config fields
+# that version understands.
 ARG SNMP_EXPORTER_VERSION=v0.31.0
 ARG NET_SNMP_VERSION=v5.9.4
 
@@ -31,16 +31,15 @@ COPY snmp/generator.yml .
 
 RUN MIBDIRS=/generator/mibs generator generate -g generator.yml -o snmp.yml
 
-FROM grafana/alloy:${ALLOY_VERSION}
+# Base images are pinned literally so Dependabot can track them.
+FROM grafana/alloy:v1.21.2
 
-ARG ALLOY_VERSION
 ARG TARGETPLATFORM
 ARG BUILD_DATE
 ARG REVISION
 ARG VERSION
 ARG REF
 
-ENV ALLOY_VERSION=${ALLOY_VERSION}
 ENV TARGETPLATFORM=${TARGETPLATFORM}
 ENV BUILD_DATE=${BUILD_DATE}
 ENV REVISION=${REVISION}
@@ -57,8 +56,7 @@ LABEL org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.ref.name="${REF}" \
       org.opencontainers.image.title="Qnap Exporter" \
       org.opencontainers.image.description="SNMP Qnap Exporter" \
-      arch="${TARGETPLATFORM}" \
-      alloy.version="${ALLOY_VERSION}"
+      arch="${TARGETPLATFORM}"
 
 COPY --from=snmp-generator /generator/snmp.yml /etc/alloy/snmp.yml
 COPY config.alloy /etc/alloy/config.alloy
