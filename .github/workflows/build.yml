@@ -7,22 +7,26 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   sem-version:
     name: Semantic versioning
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       version_tag: ${{ steps.semver.outputs.version_tag }}
       version: ${{ steps.semver.outputs.version }}
     steps:
-      - run: echo "🔎 Relesing from branch ${{ github.ref }}."
+      - run: echo "🔎 Releasing from branch ${GITHUB_REF}."
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
           fetch-tags: 'true'
       - name: Semantic versioning
-        uses: paulhatch/semantic-version@v6.0.5
+        uses: paulhatch/semantic-version@79147b94804704a613626766998afe7b2bd0bb47 # v6.0.5
         id: semver
         with:
           tag_prefix: "v"
@@ -30,13 +34,17 @@ jobs:
           debug: false
 #          bump_each_commit: true
       - name: Log version
+        env:
+          VERSION_TAG: ${{ steps.semver.outputs.version_tag }}
         run: |
-          echo "::notice::Version: ${{ steps.semver.outputs.version_tag }}"
+          echo "::notice::Version: ${VERSION_TAG}"
 
   docker-build:
     name: Build Container
     uses: ./.github/workflows/build-docker.yml
-    secrets: inherit
+    permissions:
+      contents: read
+      packages: write
     needs: sem-version
     with:
       docker-image-name: qnap-exporter
@@ -48,7 +56,9 @@ jobs:
   helm-build:
     name: Build Helm chart
     uses: ./.github/workflows/build-helm-chart.yml
-    secrets: inherit
+    permissions:
+      contents: write
+      packages: write
     needs: sem-version
     with:
       version: ${{ needs.sem-version.outputs.version }}
@@ -59,17 +69,15 @@ jobs:
   release:
     name: Create Release
     needs: [sem-version,docker-build,helm-build]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
+    permissions:
+      # gh release create
+      contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-      # https://github.blog/2022-04-12-git-security-vulnerability-announced/
-      - name: Set git repository ownership
-        run: |
-          # this is to fix GIT not liking owner of the checkout dir
-          chown -R $(id -u):$(id -g) $PWD
       - name: Create GitHub Release
         run: |
-          gh release create ${{ needs.sem-version.outputs.version_tag }} -t qnap-exporter-${{ needs.sem-version.outputs.version_tag }} --generate-notes
+          gh release create "${VERSION_TAG}" -t "qnap-exporter-${VERSION_TAG}" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION_TAG: ${{ needs.sem-version.outputs.version_tag }}
