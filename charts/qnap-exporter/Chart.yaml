@@ -2,5 +2,5 @@ apiVersion: v2
 name: qnap-exporter
 description: Polls a QNAP NAS over SNMP with Grafana Alloy and remote-writes the metrics to Grafana Cloud
 type: application
-version: 0.1.1
-appVersion: "v0.1.1"
+version: 0.0.1
+appVersion: "v0.0.1"
