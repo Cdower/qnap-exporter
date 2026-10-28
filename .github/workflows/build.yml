@@ -42,7 +42,9 @@ jobs:
   docker-build:
     name: Build Container
     uses: ./.github/workflows/build-docker.yml
-    secrets: inherit
+    permissions:
+      contents: read
+      packages: write
     needs: sem-version
     with:
       docker-image-name: qnap-exporter
@@ -56,7 +58,7 @@ jobs:
     uses: ./.github/workflows/build-helm-chart.yml
     permissions:
       contents: write
-    secrets: inherit
+      packages: write
     needs: sem-version
     with:
       version: ${{ needs.sem-version.outputs.version }}
