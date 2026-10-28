@@ -26,7 +26,7 @@ permissions:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       # pushes the Chart.yaml version bump back to the repository
       contents: write
