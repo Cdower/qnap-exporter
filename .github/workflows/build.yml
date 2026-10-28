@@ -72,18 +72,10 @@ jobs:
       # gh release create
       contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      # https://github.blog/2022-04-12-git-security-vulnerability-announced/
-      - name: Set git repository ownership
-        run: |
-          # this is to fix GIT not liking owner of the checkout dir
-          chown -R "$(id -u):$(id -g)" "$PWD"
       - name: Create GitHub Release
         run: |
           gh release create "${VERSION_TAG}" -t "qnap-exporter-${VERSION_TAG}" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           VERSION_TAG: ${{ needs.sem-version.outputs.version_tag }}
