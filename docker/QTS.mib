@@ -60,7 +60,7 @@ DiskTableEntryDef ::=
         diskSerialNumber OCTET STRING,
         diskType OCTET STRING,
         diskStatus OCTET STRING,
-        diskTemperature OCTET STRING,
+        diskTemperature Integer32,
         diskCapacity Counter64
     }
 diskIndex OBJECT-TYPE
@@ -122,7 +122,7 @@ diskStatus OBJECT-TYPE
     ::= { diskTableEntry 7 }
 
 diskTemperature OBJECT-TYPE
-    SYNTAX  OCTET STRING
+    SYNTAX  Integer32
     MAX-ACCESS  read-only
     STATUS  current
     DESCRIPTION "The temperature of hard drive."
@@ -1133,7 +1133,7 @@ DiskSMARTInfoTableEntryDef ::=
         diskSMARTInfoAttributeCurrent Integer32 , 
         diskSMARTInfoAttributeWorst Integer32 , 
         diskSMARTInfoAttributeThreshold Integer32 ,             
-        diskSMARTInfoAttributeRAW Integer32 , 
+        diskSMARTInfoAttributeRAW  Counter64, 
         diskSMARTInfoAttributeStatus OCTET STRING       
     } 
 diskSMARTInfoIndex OBJECT-TYPE
@@ -1186,7 +1186,7 @@ diskSMARTInfoAttributeThreshold OBJECT-TYPE
     ::= { diskSMARTInfoTableEntry 7}
 
 diskSMARTInfoAttributeRAW OBJECT-TYPE
-    SYNTAX  Integer32 
+    SYNTAX  Counter64
     MAX-ACCESS  read-only
     STATUS  current
     DESCRIPTION "diskSMARTInfoAttributeCurrent."
@@ -1920,21 +1920,21 @@ systemTraps OBJECT IDENTIFIER ::= { system  2 }
       STATUS current
       DESCRIPTION
            "Info: %s"
-      ::=  { systemTraps 1 }
+      ::=  { systemTraps 0 1 }
 
   eventWarning NOTIFICATION-TYPE  
       OBJECTS  { eventWarningMsg }
       STATUS current
       DESCRIPTION 
           "Warn: %s"
-      ::=  { systemTraps 2 }
+      ::=  { systemTraps 0 2 }
 
   eventError NOTIFICATION-TYPE
       OBJECTS  { eventErrorMsg }
       STATUS current
       DESCRIPTION 
            "Error: %s"
-      ::=  { systemTraps 4 }
+      ::=  { systemTraps 0 4 }
 
 systemModel OBJECT-TYPE
     SYNTAX OCTET STRING

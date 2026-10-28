@@ -1,8 +1,7 @@
 # Default values for qnap-exporter
-replicaCount: 1
 
 image:
-  repository: ghcr.io/bsosnowski/docker/qnap-exporter
+  repository: ghcr.io/cdower/docker/qnap-exporter
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag:
@@ -33,9 +32,10 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+# Alloy UI and health endpoints.
 service:
   type: ClusterIP
-  port: 9273
+  port: 12345
 
 ingress:
   enabled: false
@@ -68,18 +68,46 @@ tolerations: []
 affinity: {}
 
 nas:
+  # Value of the "instance" label on every metric.
   hostname: NAS453D
   snmp:
-    agent: "udp://192.168.1.100:161"
-    timeout: "110s"
-    version: 2
+    # host[:port] of the NAS SNMP agent (SNMP v2c), e.g. "192.168.1.100:161".
+    # Required.
+    address: ""
+    # Ignored when grafanaCloud.existingSecret is set.
     community: "snmp-telegraf"
-    retries: 0
+    # Timeout and retries for each SNMP request. QNAP agents can be slow to
+    # answer large table walks.
+    timeout: 10s
+    retries: 2
+  # How often to poll the NAS, and the limit for one full poll. The timeout
+  # must not exceed the interval.
+  scrapeInterval: 120s
+  scrapeTimeout: 110s
 
-metrics:
-  enabled: true
-  serviceMonitor:
-    interval: 120s
-    scrapeTimeout: 30s
-    labels:
-      release: kube-monitoring
+grafanaCloud:
+  # Prometheus remote_write endpoint, e.g.
+  # https://prometheus-prod-XX-prod-REGION.grafana.net/api/prom/push
+  prometheusUrl: ""
+  # Grafana Cloud Prometheus instance ID.
+  username: ""
+  # Access policy token with the metrics:write scope.
+  # Ignored when existingSecret is set.
+  apiKey: ""
+  # Name of an existing Secret holding the GRAFANA_CLOUD_API_KEY and
+  # QNAP_SNMP_COMMUNITY keys. When empty, the chart creates one from
+  # grafanaCloud.apiKey and nas.snmp.community.
+  existingSecret: ""
+
+# Extra environment variables for the Alloy container.
+extraEnv: []
+
+# Grafana dashboard ConfigMap, for Grafana instances that load dashboards
+# through the sidecar. On Grafana Cloud, import dashboards/qnap-dashboard.json
+# instead.
+dashboard:
+  enabled: false
+  # Defaults to the release namespace.
+  namespace: ""
+  labels:
+    grafana_dashboard: "1"

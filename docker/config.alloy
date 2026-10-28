@@ -1,0 +1,71 @@
+// Polls a QNAP NAS over SNMP and remote-writes the metrics to Grafana Cloud.
+//
+// Settings come from environment variables:
+//   QNAP_SNMP_ADDRESS                  NAS address, host[:port] (required)
+//   QNAP_SNMP_COMMUNITY                SNMP v2c community (default "public")
+//   QNAP_HOSTNAME                      value of the "instance" label (default: the address)
+//   SCRAPE_INTERVAL                    how often to poll the NAS (default "120s")
+//   SCRAPE_TIMEOUT                     limit for one full poll; must not exceed the interval (default "110s")
+//   SNMP_TIMEOUT                       timeout for each SNMP request (default "10s")
+//   SNMP_RETRIES                       retries for each failed SNMP request (default "2")
+//   GRAFANA_CLOUD_PROMETHEUS_URL       e.g. https://prometheus-prod-XX.grafana.net/api/prom/push (required)
+//   GRAFANA_CLOUD_PROMETHEUS_USERNAME  Grafana Cloud Prometheus instance ID (required)
+//   GRAFANA_CLOUD_API_KEY              Grafana Cloud access policy token with metrics:write (required)
+
+local.file "qnap_modules" {
+  filename = "/etc/alloy/snmp.yml"
+}
+
+prometheus.exporter.snmp "qnap" {
+  // snmp.yml holds only the generated "qnap" module; the auth is appended here
+  // so the community never has to be baked into the image. Merging keeps
+  // Alloy's embedded modules (if_mib, system, ...) available alongside it.
+  config_merge_strategy = "merge"
+  // %q yields a JSON-quoted string, which is also valid YAML.
+  config = local.file.qnap_modules.content +
+    "\nauths:\n  qnap:\n    version: 2\n    community: " +
+    string.format("%q", coalesce(sys.env("QNAP_SNMP_COMMUNITY"), "public")) + "\n"
+
+  target "qnap" {
+    address     = sys.env("QNAP_SNMP_ADDRESS")
+    module      = "qnap,if_mib"
+    auth        = "qnap"
+    walk_params = "qnap"
+  }
+
+  // QNAP agents answer large table walks slowly, so allow more per request
+  // than snmp_exporter's 5s default.
+  walk_param "qnap" {
+    timeout = coalesce(sys.env("SNMP_TIMEOUT"), "10s")
+    retries = encoding.from_json(coalesce(sys.env("SNMP_RETRIES"), "2"))
+  }
+}
+
+// The exporter sets instance to its own component name; replace it with the
+// NAS hostname so dashboards can tell devices apart.
+discovery.relabel "qnap" {
+  targets = prometheus.exporter.snmp.qnap.targets
+
+  rule {
+    target_label = "instance"
+    replacement  = coalesce(sys.env("QNAP_HOSTNAME"), sys.env("QNAP_SNMP_ADDRESS"))
+  }
+}
+
+prometheus.scrape "qnap" {
+  targets         = discovery.relabel.qnap.output
+  forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
+  scrape_interval = coalesce(sys.env("SCRAPE_INTERVAL"), "120s")
+  scrape_timeout  = coalesce(sys.env("SCRAPE_TIMEOUT"), "110s")
+}
+
+prometheus.remote_write "grafana_cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_PROMETHEUS_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_PROMETHEUS_USERNAME")
+      password = sys.env("GRAFANA_CLOUD_API_KEY")
+    }
+  }
+}

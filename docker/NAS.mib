@@ -58,21 +58,21 @@ NAS-MIB DEFINITIONS ::= BEGIN
         STATUS current
         DESCRIPTION
             "Info: %s"
-        ::=  { systemTraps 1 }
+        ::=  { systemTraps 0 1 }
 
     eventWarning NOTIFICATION-TYPE  
         OBJECTS  { eventWarningMsg }
         STATUS current
         DESCRIPTION 
             "Warn: %s"
-        ::=  { systemTraps 2 }
+        ::=  { systemTraps 0 2 }
 
     eventError NOTIFICATION-TYPE
         OBJECTS  { eventErrorMsg }
         STATUS current
         DESCRIPTION 
             "Error: %s"
-        ::=  { systemTraps 4 } 
+        ::=  { systemTraps 0 4 } 
  
  -- system inform
     systemInfo        OBJECT IDENTIFIER ::= { storageSystem 2 }

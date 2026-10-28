@@ -31,7 +31,7 @@
       "collapsed": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "h": 1,
@@ -45,7 +45,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "refId": "A"
         }
@@ -56,7 +56,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -107,11 +107,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_QTS_sysUptime{host=\"$host\"} /100",
+          "expr": "sysUptime{instance=\"$host\"} /100",
           "groupBy": [
             {
               "params": [
@@ -164,7 +164,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -226,11 +226,11 @@
           "alias": "Core $tag_cpuID",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "   sum by (job)(snmp_QNAP_cpuTable_cpuUsage{host=\"$host\"} ) /4 ",
+          "expr": "avg(cpuUsage{instance=\"$host\"})",
           "groupBy": [
             {
               "params": [
@@ -285,7 +285,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "CPU Temperature in Celcius degrees",
       "fieldConfig": {
@@ -344,10 +344,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "snmp_QNAP_systemTable_cpu_TemperatureEX{host=\"$host\"}",
+          "expr": "cpu_TemperatureEX{instance=\"$host\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -360,7 +360,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -414,11 +414,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "snmp_QNAP_systemVolumeTableEx_sysVolumeFreeSize{host=\"$host\"}",
+          "expr": "sysVolumeFreeSizeEX{instance=\"$host\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -428,11 +428,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "snmp_QNAP_systemVolumeTableEx_sysVolumeTotalSizeEX{host=\"$host\"}",
+          "expr": "sysVolumeTotalSizeEX{instance=\"$host\"}",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -544,7 +544,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Physical port status",
       "fieldConfig": {
@@ -683,11 +683,11 @@
           "alias": "$tag_ifDescr",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_IF_ifTable_ifMtu{host=\"$host\"}",
+          "expr": "ifMtu{instance=\"$host\"}",
           "format": "table",
           "groupBy": [
             {
@@ -786,11 +786,11 @@
           "alias": "$tag_ifDescr",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_IF_ifTable_ifSpeed{host=\"$host\"} / 1000000",
+          "expr": "ifSpeed{instance=\"$host\"} / 1000000",
           "format": "table",
           "groupBy": [
             {
@@ -889,11 +889,11 @@
           "alias": "$tag_ifDescr",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_IF_ifTable_ifPhysAddress{host=\"$host\"}",
+          "expr": "ifPhysAddress{instance=\"$host\"}",
           "format": "table",
           "groupBy": [
             {
@@ -1005,7 +1005,8 @@
                 "ifDescr",
                 "ifPhysAddress 1",
                 "Value #A",
-                "Value #B"
+                "Value #B",
+                "ifPhysAddress"
               ]
             }
           }
@@ -1066,7 +1067,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Status of the services running on NAS",
       "fieldConfig": {
@@ -1176,11 +1177,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_QTS_nfsV2V3IsEnabled{host=\"$host\"}",
+          "expr": "nfsV2V3IsEnabled{instance=\"$host\"}",
           "groupBy": [],
           "interval": "",
           "legendFormat": "NFS V2 / V3",
@@ -1311,11 +1312,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_QTS_nfsV4IsEnabled{host=\"$host\"}",
+          "expr": "nfsV4IsEnabled{instance=\"$host\"}",
           "groupBy": [],
           "hide": false,
           "interval": "",
@@ -1447,11 +1448,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_QTS_sshIsEnabled{host=\"$host\"}",
+          "expr": "sshIsEnabled{instance=\"$host\"}",
           "groupBy": [],
           "hide": false,
           "interval": "",
@@ -1583,11 +1584,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_QTS_sshSFTPEnabled{host=\"$host\"}",
+          "expr": "sshSFTPEnabled{instance=\"$host\"}",
           "groupBy": [],
           "hide": false,
           "interval": "",
@@ -1719,11 +1720,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_QTS_ftpEnabled{host=\"$host\"}",
+          "expr": "ftpEnabled{instance=\"$host\"}",
           "groupBy": [],
           "hide": false,
           "interval": "",
@@ -1855,11 +1856,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_QTS_telnetIsEnabled{host=\"$host\"}",
+          "expr": "telnetIsEnabled{instance=\"$host\"}",
           "groupBy": [],
           "hide": false,
           "interval": "",
@@ -2017,7 +2018,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2075,11 +2076,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "snmp_QTS_systemTotalMem{host=\"$host\"} - snmp_QTS_systemAvailableMem{host=\"$host\"}",
+          "expr": "systemTotalMem{instance=\"$host\"} - systemAvailableMem{instance=\"$host\"}",
           "groupBy": [
             {
               "params": [
@@ -2128,7 +2129,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Enclosure temperature limited to the first enclosure with ID=0.",
       "fieldConfig": {
@@ -2187,10 +2188,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "snmp_QNAP_enclosureTable_enclosureSystemTemp{host=\"$host\", enclosureID=\"0\"}",
+          "expr": "enclosureSystemTemp{instance=\"$host\", enclosureID=\"0\"}",
           "legendFormat": "{{enclosureModel}}",
           "range": true,
           "refId": "A"
@@ -2203,7 +2204,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Disk temperatures in Celcius degree",
       "fieldConfig": {
@@ -2390,11 +2391,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "snmp_QNAP_diskTable_diskTemperture{host=\"$host\"}",
+          "expr": "diskTemperture{instance=\"$host\"} * on (instance, diskIndex) group_left (diskSummary) diskSummary{instance=\"$host\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -2454,7 +2455,7 @@
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "h": 1,
@@ -2467,7 +2468,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2562,11 +2563,11 @@
               "alias": "$tag_cpuID",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QNAP_cpuTable_cpuUsage{host=\"$host\"}",
+              "expr": "cpuUsage{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -2619,7 +2620,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2706,11 +2707,11 @@
               "alias": "Available",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QTS_systemAvailableMem{host=\"$host\"}",
+              "expr": "systemAvailableMem{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -2754,11 +2755,11 @@
               "alias": "Buffered",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QTS_systemBufferMemory{host=\"$host\"}",
+              "expr": "systemBufferMemory{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -2802,11 +2803,11 @@
               "alias": "Cache",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QTS_systemCacheMemory{host=\"$host\"}",
+              "expr": "systemCacheMemory{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -2850,11 +2851,11 @@
               "alias": "Free",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QTS_systemFreeMem{host=\"$host\"}",
+              "expr": "systemFreeMem{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -2898,11 +2899,11 @@
               "alias": "Total",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QTS_systemTotalMem{host=\"$host\"}",
+              "expr": "systemTotalMem{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -2946,11 +2947,11 @@
               "alias": "Used",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QTS_systemTotalMem{host=\"$host\"} - snmp_QTS_systemAvailableMem{host=\"$host\"}",
+              "expr": "systemTotalMem{instance=\"$host\"} - systemAvailableMem{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -3008,7 +3009,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "refId": "A"
         }
@@ -3029,7 +3030,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -3122,11 +3123,11 @@
               "alias": "QNAP $tag_enclosureModel Enclosure",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QNAP_enclosureTable_enclosureSystemTemp{host=\"$host\"}",
+              "expr": "enclosureSystemTemp{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -3182,11 +3183,11 @@
               "alias": "Intel� Celeron� J4125",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QNAP_systemTable_cpu_TemperatureEX{host=\"$host\"}",
+              "expr": "cpu_TemperatureEX{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -3240,7 +3241,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -3329,11 +3330,11 @@
               "alias": "$tag_sysFanDescrEX",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QNAP_systemFanTableEx_sysFanSpeedEX{host=\"$host\"}",
+              "expr": "sysFanSpeedEX{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -3391,7 +3392,7 @@
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "h": 1,
@@ -3404,7 +3405,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -3497,11 +3498,11 @@
               "alias": "$tag_diskModel [ Enclosure = $tag_diskID ]",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QNAP_diskTable_diskTemperture{host=\"$host\"}",
+              "expr": "diskTemperture{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -3560,7 +3561,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -3651,11 +3652,11 @@
               "alias": "$tag_sysVolumeDescrEX",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QNAP_systemVolumeTableEx_sysVolumeFreeSize{host=\"$host\"}",
+              "expr": "sysVolumeFreeSizeEX{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -3708,7 +3709,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -3799,11 +3800,11 @@
               "alias": "BLVID: $tag_blvID",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QNAP_diskPerformanceTable_iops{host=\"$host\"}",
+              "expr": "iops{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -3858,7 +3859,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -3949,11 +3950,11 @@
               "alias": "BLVID: $tag_blvID",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QNAP_diskPerformanceTable_latency{host=\"$host\"}",
+              "expr": "latency{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -4008,7 +4009,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "refId": "A"
         }
@@ -4020,7 +4021,7 @@
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "h": 1,
@@ -4032,9 +4033,8 @@
       "panels": [
         {
           "datasource": {
-            "default": true,
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -4118,12 +4118,12 @@
               "alias": "$tag_ifDescrEX",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "rate(snmp_QNAP_systemIfTableEx_ifPacketsSentEX{host=\"$host\"}[5m])",
+              "expr": "rate(ifPacketsSentEX{instance=\"$host\"}[5m])",
               "fullMetaSearch": false,
               "groupBy": [
                 {
@@ -4184,9 +4184,8 @@
         },
         {
           "datasource": {
-            "default": true,
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -4270,12 +4269,12 @@
               "alias": "$tag_ifDescrEX",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "rate(snmp_QNAP_systemIfTableEx_ifPacketsReceivedEX{host=\"$host\"}[5m])",
+              "expr": "rate(ifPacketsReceivedEX{instance=\"$host\"}[5m])",
               "fullMetaSearch": false,
               "groupBy": [
                 {
@@ -4337,7 +4336,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -4422,11 +4421,11 @@
               "alias": "$tag_ifDescrEX",
               "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "snmp_QNAP_systemIfTableEx_ifErrorPacketsEX{host=\"$host\"}",
+              "expr": "ifErrorPacketsEX{instance=\"$host\"}",
               "groupBy": [
                 {
                   "params": [
@@ -4487,7 +4486,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "refId": "A"
         }
@@ -4499,7 +4498,7 @@
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "h": 1,
@@ -4512,7 +4511,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "${loki_datasource}"
           },
           "gridPos": {
             "h": 12,
@@ -4536,7 +4535,7 @@
             {
               "datasource": {
                 "type": "loki",
-                "uid": "P8E80F9AEF21F6940"
+                "uid": "${loki_datasource}"
               },
               "editorMode": "code",
               "expr": "{hostname=\"$host\"} |~ \"(?i)$search\"",
@@ -4555,7 +4554,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "refId": "A"
         }
@@ -4569,6 +4568,34 @@
   "tags": [],
   "templating": {
     "list": [
+      {
+        "name": "datasource",
+        "label": "Prometheus",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false
+      },
+      {
+        "name": "loki_datasource",
+        "label": "Loki",
+        "type": "datasource",
+        "query": "loki",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false
+      },
       {
         "auto": true,
         "auto_count": 1,
@@ -4635,25 +4662,20 @@
         "type": "interval"
       },
       {
-        "current": {
-          "selected": false,
-          "text": "NAS453D",
-          "value": "NAS453D"
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "${datasource}"
         },
-        "definition": "label_values(snmp_QNAP_cpuTable_cpuUsage,host)",
+        "definition": "label_values(cpuUsage,instance)",
         "hide": 0,
         "includeAll": false,
         "label": "Host",
         "multi": false,
         "name": "host",
-        "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(snmp_QNAP_cpuTable_cpuUsage,host)",
+          "query": "label_values(cpuUsage,instance)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -4663,7 +4685,8 @@
         "tagValuesQuery": "",
         "tagsQuery": "",
         "type": "query",
-        "useTags": false
+        "useTags": false,
+        "options": []
       },
       {
         "current": {
