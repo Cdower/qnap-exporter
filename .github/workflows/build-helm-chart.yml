@@ -20,10 +20,16 @@ on:
         type: string
         description:  Helm remote repository directory
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      # pushes the Chart.yaml version bump back to the repository
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -32,7 +38,7 @@ jobs:
       - name: Set git settings and fix repository ownership
         run: |
           # this is to fix GIT not liking owner of the checkout dir
-          chown -R $(id -u):$(id -g) $PWD
+          chown -R "$(id -u):$(id -g)" "$PWD"
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
           git config --global --add --bool push.autoSetupRemote true
@@ -42,18 +48,20 @@ jobs:
         shell: bash
         working-directory: ${{ inputs.context-path }}
         run: |
-          echo "chart-name=$(yq -r '.name' Chart.yaml)" >> $GITHUB_OUTPUT
+          echo "chart-name=$(yq -r '.name' Chart.yaml)" >> "$GITHUB_OUTPUT"
 
       - name: Update Chart version
         shell: bash
         working-directory: ${{ inputs.context-path }}
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          yq e -i '.appVersion = "v${{ inputs.version }}"' Chart.yaml
-          yq e -i '.version = "${{ inputs.version }}"' Chart.yaml
+          yq e -i '.appVersion = "v" + strenv(VERSION)' Chart.yaml
+          yq e -i '.version = strenv(VERSION)' Chart.yaml
 
       - name: Login to Docker Registry
         id: docker-login
-        uses: docker/login-action@v4
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
@@ -62,23 +70,37 @@ jobs:
       - name: Deploy chart
         shell: bash
         working-directory: ${{ inputs.context-path }}
+        env:
+          CHART_NAME: ${{ steps.vars.outputs.chart-name }}
+          VERSION: ${{ inputs.version }}
+          HELM_REGISTRY: ${{ inputs.helm-registry }}
+          HELM_REGISTRY_DIRECTORY: ${{ inputs.helm-registry-directory }}
         run: |
           helm package .
-          helm push ${{ steps.vars.outputs.chart-name}}-${{ inputs.version }}.tgz ${{ inputs.helm-registry }}/${{ inputs.helm-registry-directory }}
+          helm push "${CHART_NAME}-${VERSION}.tgz" "${HELM_REGISTRY}/${HELM_REGISTRY_DIRECTORY}"
 
       - name: Commit and push
         shell: bash
         working-directory: ${{ inputs.context-path }}
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
           git add Chart.yaml
-          git commit -a -m "Helm chart version bumped to ${{ inputs.version }}"
+          git commit -a -m "Helm chart version bumped to ${VERSION}"
           git push
 
       - name: Summary Helm release
+        env:
+          CHART_NAME: ${{ steps.vars.outputs.chart-name }}
+          VERSION: ${{ inputs.version }}
+          HELM_REGISTRY: ${{ inputs.helm-registry }}
+          HELM_REGISTRY_DIRECTORY: ${{ inputs.helm-registry-directory }}
         run: |
-          echo "### Helm Chart :white_check_mark:" >> $GITHUB_STEP_SUMMARY
-          echo "| <!-- -->    | <!-- -->    |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------------|-------------|" >> $GITHUB_STEP_SUMMARY
-          echo "|Name    |${{ steps.vars.outputs.chart-name}}|" >> $GITHUB_STEP_SUMMARY
-          echo "|Version |${{ inputs.version }}|" >> $GITHUB_STEP_SUMMARY
-          echo "|URL     |${{ inputs.helm-registry }}/${{ inputs.helm-registry-directory }}/${{ steps.vars.outputs.chart-name}}/${{ steps.vars.outputs.chart-name}}-${{ inputs.version }}.tgz|" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### Helm Chart :white_check_mark:"
+            echo "| <!-- -->    | <!-- -->    |"
+            echo "|-------------|-------------|"
+            echo "|Name    |${CHART_NAME}|"
+            echo "|Version |${VERSION}|"
+            echo "|URL     |${HELM_REGISTRY}/${HELM_REGISTRY_DIRECTORY}/${CHART_NAME}/${CHART_NAME}-${VERSION}.tgz|"
+          } >> "$GITHUB_STEP_SUMMARY"

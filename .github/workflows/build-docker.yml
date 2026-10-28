@@ -25,21 +25,26 @@ on:
         default: .
         description: Context path
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
       - name: Docker Setup Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
           install: true
      
       - name: Login to Container registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ${{ inputs.docker-registry }}
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
@@ -47,10 +52,10 @@ jobs:
 
       - name: Get build date
         id: date
-        run: echo "date=$(date +'%Y-%m-%d %H:%m:%S')" >> $GITHUB_OUTPUT
+        run: echo "date=$(date +'%Y-%m-%d %H:%m:%S')" >> "$GITHUB_OUTPUT"
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ${{ inputs.context-path }}
           push: true

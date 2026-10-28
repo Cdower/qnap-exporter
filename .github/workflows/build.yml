@@ -7,22 +7,27 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   sem-version:
     name: Semantic versioning
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       version_tag: ${{ steps.semver.outputs.version_tag }}
       version: ${{ steps.semver.outputs.version }}
     steps:
-      - run: echo "🔎 Relesing from branch ${{ github.ref }}."
+      - run: echo "🔎 Relesing from branch ${GITHUB_REF}."
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: 'true'
       - name: Semantic versioning
-        uses: paulhatch/semantic-version@v6.0.5
+        uses: paulhatch/semantic-version@79147b94804704a613626766998afe7b2bd0bb47 # v6.0.5
         id: semver
         with:
           tag_prefix: "v"
@@ -30,12 +35,16 @@ jobs:
           debug: false
 #          bump_each_commit: true
       - name: Log version
+        env:
+          VERSION_TAG: ${{ steps.semver.outputs.version_tag }}
         run: |
-          echo "::notice::Version: ${{ steps.semver.outputs.version_tag }}"
+          echo "::notice::Version: ${VERSION_TAG}"
 
   docker-build:
     name: Build Container
     uses: ./.github/workflows/build-docker.yml
+    permissions:
+      contents: read
     secrets: inherit
     needs: sem-version
     with:
@@ -48,6 +57,8 @@ jobs:
   helm-build:
     name: Build Helm chart
     uses: ./.github/workflows/build-helm-chart.yml
+    permissions:
+      contents: write
     secrets: inherit
     needs: sem-version
     with:
@@ -60,6 +71,9 @@ jobs:
     name: Create Release
     needs: [sem-version,docker-build,helm-build]
     runs-on: ubuntu-latest
+    permissions:
+      # gh release create
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -67,9 +81,10 @@ jobs:
       - name: Set git repository ownership
         run: |
           # this is to fix GIT not liking owner of the checkout dir
-          chown -R $(id -u):$(id -g) $PWD
+          chown -R "$(id -u):$(id -g)" "$PWD"
       - name: Create GitHub Release
         run: |
-          gh release create ${{ needs.sem-version.outputs.version_tag }} -t qnap-exporter-${{ needs.sem-version.outputs.version_tag }} --generate-notes
+          gh release create "${VERSION_TAG}" -t "qnap-exporter-${VERSION_TAG}" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION_TAG: ${{ needs.sem-version.outputs.version_tag }}
