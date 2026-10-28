@@ -26,7 +26,7 @@ permissions:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       # pushes the Chart.yaml version bump back to the repository
       contents: write
@@ -61,13 +61,13 @@ jobs:
           yq e -i '.appVersion = "v" + strenv(VERSION)' Chart.yaml
           yq e -i '.version = strenv(VERSION)' Chart.yaml
 
-      - name: Login to Docker Registry
-        id: docker-login
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to Helm registry
+        shell: bash
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$REGISTRY_TOKEN" | helm registry login ghcr.io --username "$REGISTRY_USER" --password-stdin
 
       - name: Deploy chart
         shell: bash
