@@ -14,16 +14,15 @@ jobs:
   sem-version:
     name: Semantic versioning
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     outputs:
       version_tag: ${{ steps.semver.outputs.version_tag }}
       version: ${{ steps.semver.outputs.version }}
     steps:
-      - run: echo "🔎 Relesing from branch ${GITHUB_REF}."
+      - run: echo "🔎 Releasing from branch ${GITHUB_REF}."
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
           fetch-tags: 'true'
       - name: Semantic versioning
@@ -43,8 +42,6 @@ jobs:
   docker-build:
     name: Build Container
     uses: ./.github/workflows/build-docker.yml
-    permissions:
-      contents: read
     secrets: inherit
     needs: sem-version
     with:
@@ -76,7 +73,9 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       # https://github.blog/2022-04-12-git-security-vulnerability-announced/
       - name: Set git repository ownership
         run: |
