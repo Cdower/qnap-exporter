@@ -34,7 +34,7 @@ COPY snmp/generator.yml .
 RUN MIBDIRS=/generator/mibs generator generate -g generator.yml -o snmp.yml
 
 # Base images are pinned literally so Dependabot can track them.
-FROM grafana/alloy:v1.21.2
+FROM grafana/alloy:v1.21.3
 
 ARG TARGETPLATFORM
 ARG BUILD_DATE
