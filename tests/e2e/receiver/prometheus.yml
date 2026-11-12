@@ -1,0 +1,3 @@
+# Stand-in for Grafana Cloud: Prometheus only receives remote_write and
+# scrapes nothing itself.
+global: {}

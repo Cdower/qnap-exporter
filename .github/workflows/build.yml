@@ -39,13 +39,19 @@ jobs:
         run: |
           echo "::notice::Version: ${VERSION_TAG}"
 
+  test:
+    name: Test
+    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+
   docker-build:
     name: Build Container
     uses: ./.github/workflows/build-docker.yml
     permissions:
       contents: read
       packages: write
-    needs: sem-version
+    needs: [sem-version, test]
     with:
       docker-image-name: qnap-exporter
       docker-registry: ghcr.io
@@ -59,7 +65,7 @@ jobs:
     permissions:
       contents: write
       packages: write
-    needs: sem-version
+    needs: [sem-version, test]
     with:
       version: ${{ needs.sem-version.outputs.version }}
       context-path: charts/qnap-exporter

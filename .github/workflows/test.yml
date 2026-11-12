@@ -1,0 +1,142 @@
+name: Test
+
+# Checks that the exporter still works end to end, so dependency updates
+# (Dependabot or otherwise) can be merged on a green run:
+#   lint   - workflow syntax and Dockerfile consistency
+#   image  - builds the image for every release platform, then runs it against
+#            a simulated QNAP NAS and checks the metrics that reach a
+#            remote_write receiver (tests/e2e)
+#   chart  - lints and renders the Helm chart (tests/chart)
+on:
+  pull_request:
+  workflow_dispatch:
+  # Called by build.yml so nothing is released from a broken main.
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint workflows
+        run: docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color
+
+      # Dependabot bumps the FROM line only; the label has to follow by hand.
+      - name: Check alloy.version label matches the base image
+        run: |
+          from=$(sed -n 's|^FROM grafana/alloy:\([^ ]*\).*|\1|p' docker/Dockerfile)
+          label=$(sed -n 's|.*alloy.version="\([^"]*\)".*|\1|p' docker/Dockerfile)
+          echo "FROM grafana/alloy:${from}, alloy.version label ${label}"
+          if [[ -z "$from" || "$from" != "$label" ]]; then
+            echo "::error file=docker/Dockerfile::alloy.version label (${label}) does not match FROM grafana/alloy:${from}. Set alloy.version=\"${from}\" in docker/Dockerfile."
+            exit 1
+          fi
+          comment=$(sed -n 's|.*as of Alloy \(v[0-9.]*\).*|\1|p' docker/Dockerfile)
+          if [[ -n "$comment" && "$comment" != "$from" ]]; then
+            echo "::warning file=docker/Dockerfile,line=1::The comment about Alloy's embedded snmp_exporter refers to Alloy ${comment}, but the image uses ${from}. See the image job summary for the embedded version."
+          fi
+
+  image:
+    name: Build and test image
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # Same platforms as the release build. The arm64 stage only copies files,
+      # so it needs no emulation.
+      - name: Build for all release platforms
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: docker
+          push: false
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Load amd64 image for testing
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: docker
+          push: false
+          load: true
+          platforms: linux/amd64
+          tags: qnap-exporter:e2e
+          cache-from: type=gha
+          build-args: |
+            VERSION=e2e
+            REVISION=${{ github.sha }}
+
+      - name: Report component versions
+        run: |
+          alloy=$(docker run --rm --entrypoint /bin/alloy qnap-exporter:e2e --version | head -n1)
+          id=$(docker create qnap-exporter:e2e)
+          docker cp "$id:/bin/alloy" "$RUNNER_TEMP/alloy" >/dev/null
+          docker rm "$id" >/dev/null
+          embedded=unknown
+          if command -v go >/dev/null; then
+            embedded=$(go version -m "$RUNNER_TEMP/alloy" | awk '$2 == "github.com/prometheus/snmp_exporter" {print $3}')
+          fi
+          generator=$(sed -n 's/^ARG SNMP_EXPORTER_VERSION=//p' docker/Dockerfile)
+          golang=$(sed -n 's|^FROM .*golang:\([^ ]*\).*|\1|p' docker/Dockerfile)
+          metrics=$(docker run --rm --entrypoint cat qnap-exporter:e2e /etc/alloy/snmp.yml | grep -c '^ *- name:')
+          {
+            echo "### Component versions"
+            echo "| Component | Version |"
+            echo "|---|---|"
+            echo "| Alloy | ${alloy} |"
+            echo "| snmp_exporter embedded in Alloy | ${embedded:-unknown} |"
+            echo "| snmp_exporter generator | ${generator} |"
+            echo "| Go image for the generator | ${golang} |"
+            echo "| Metrics in generated snmp.yml | ${metrics} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: End-to-end test
+        env:
+          EXPORTER_IMAGE: qnap-exporter:e2e
+        run: tests/e2e/run.sh --no-build
+
+  chart:
+    name: Helm chart
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check chart
+        run: tests/chart/check.sh
+
+  # A single check to require in branch protection.
+  passed:
+    name: Tests passed
+    if: always()
+    needs: [lint, image, chart]
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Check job results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: ${RESULTS}"
+          for result in $RESULTS; do
+            [[ "$result" == "success" ]] || exit 1
+          done
