@@ -1,4 +1,4 @@
-# Alloy embeds its own snmp_exporter (v0.29.0 as of Alloy v1.21.2). Newer
+# Alloy embeds its own snmp_exporter (v0.29.0 as of Alloy v1.21.3). Newer
 # generators are fine as long as the rendered snmp.yml only uses config fields
 # that version understands.
 ARG SNMP_EXPORTER_VERSION=v0.31.0
@@ -60,7 +60,7 @@ LABEL org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.title="Qnap Exporter" \
       org.opencontainers.image.description="SNMP Qnap Exporter" \
       arch="${TARGETPLATFORM}" \
-      alloy.version="v1.21.2"
+      alloy.version="v1.21.3"
 
 COPY --from=snmp-generator /generator/snmp.yml /etc/alloy/snmp.yml
 COPY config.alloy /etc/alloy/config.alloy
