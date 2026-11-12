@@ -86,6 +86,29 @@ or just pull:
  helm pull oci://ghcr.io/cdower/charts/qnap-exporter --version 0.1.1
 ```
 
+## Testing
+Every pull request (including Dependabot's) runs `.github/workflows/test.yml`, and releases from `main` only
+go ahead when it passes. Require the **Tests passed** check in branch protection to gate merges on it.
+
+- **End-to-end** (`tests/e2e`): builds the image, runs it against a simulated QNAP NAS
+  ([snmpsim](https://github.com/lextudio/snmpsim) serving `tests/e2e/snmpsim/data/qnap-e2e.snmprec`) and a
+  Prometheus remote_write receiver standing in for Grafana Cloud, then checks that every Alloy component is
+  healthy, every Prometheus query in the dashboard returns data, and specific series carry the expected values
+  and labels.
+- **Helm chart** (`tests/chart/check.sh`): lints and renders the chart, and checks that its Alloy arguments and
+  environment variables still match the image.
+- **Lint**: actionlint for the workflows, and the `alloy.version` label must match the `grafana/alloy` base
+  image (Dependabot only bumps the `FROM` line).
+
+The job summary lists the Alloy version, the snmp_exporter version embedded in it and the generator version,
+which is what to compare when an Alloy update lands. Run the tests locally with Docker:
+```shell
+tests/e2e/run.sh          # KEEP=1 leaves the stack up: Alloy UI on :12345, receiver on :9090
+tests/chart/check.sh      # needs helm and yq v4
+```
+When the dashboard or `docker/snmp/generator.yml` gains a metric, add its OIDs to the `.snmprec` fixture
+(lines are `OID|type|value`, sorted by OID) and, for exact values, an entry to `EXPECTED` in `tests/e2e/check.py`.
+
 ## TODO
 - [ ] add support for Syslog -> Loki
 - [ ] add support for Prometheus rules

@@ -1,0 +1,51 @@
+# End-to-end test for the qnap-exporter image:
+#
+#   snmpsim (fake QNAP NAS) <-SNMP- exporter -remote_write-> receiver (Prometheus)
+#
+# Run it with tests/e2e/run.sh, which also checks the results.
+name: qnap-exporter-e2e
+
+services:
+  snmpsim:
+    image: qnap-exporter-e2e-snmpsim
+    build: ./snmpsim
+
+  receiver:
+    image: prom/prometheus:v3.5.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver
+      - --storage.tsdb.path=/prometheus
+    volumes:
+      - ./receiver/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+
+  exporter:
+    image: ${EXPORTER_IMAGE:-qnap-exporter:e2e}
+    build: ../../docker
+    # Same arguments the Helm chart passes, so a CLI change in a new Alloy
+    # release fails here rather than in the cluster. tests/chart/check.sh
+    # verifies they still match the chart and the Dockerfile CMD.
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --server.http.listen-addr=0.0.0.0:12345
+    environment:
+      QNAP_SNMP_ADDRESS: snmpsim:1161
+      # Must match the snmpsim data file name; a wrong community gets no answer.
+      QNAP_SNMP_COMMUNITY: qnap-e2e
+      QNAP_HOSTNAME: e2e-nas
+      SCRAPE_INTERVAL: 5s
+      SCRAPE_TIMEOUT: 4s
+      SNMP_TIMEOUT: 2s
+      SNMP_RETRIES: "1"
+      GRAFANA_CLOUD_PROMETHEUS_URL: http://receiver:9090/api/v1/write
+      GRAFANA_CLOUD_PROMETHEUS_USERNAME: "123456"
+      GRAFANA_CLOUD_API_KEY: e2e-dummy-token
+    ports:
+      - "127.0.0.1:12345:12345"
+    depends_on:
+      - snmpsim
+      - receiver

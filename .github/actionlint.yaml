@@ -1,0 +1,4 @@
+# actionlint's built-in runner list lags behind GitHub's hosted runners.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
